@@ -1,8 +1,17 @@
 import admin from '../firebase.js';
 
 export default async function handler(req, res) {
-  const { userId } = req.query;
+  // Allow your frontend origin
+  res.setHeader('Access-Control-Allow-Origin', 'https://bookscoffeedreams.github.io');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  if (req.method === 'OPTIONS') {
+    // Preflight request
+    return res.status(200).end();
+  }
+
+  const { userId } = req.query;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
   try {
@@ -10,7 +19,6 @@ export default async function handler(req, res) {
     if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
 
     const data = userDoc.data();
-
     const profile = {
       level: data.level,
       rank: data.rank,
