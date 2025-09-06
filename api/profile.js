@@ -1,4 +1,4 @@
-import admin from '../../firebase.js';
+import admin from '../firebase.js';
 
 export default async function handler(req, res) {
   const { userId } = req.query;
