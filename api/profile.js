@@ -1,3 +1,4 @@
+// profile.js
 import admin from '../firebase.js';
 
 export default async function handler(req, res) {
@@ -19,22 +20,32 @@ export default async function handler(req, res) {
     if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
 
     const data = userDoc.data();
+
+    // Safely extract nested data and provide defaults
     const profile = {
-      level: data.level,
-      rank: data.rank,
-      messages: data.messages,
-      voiceHours: data.voiceHours,
-      vcStreak: data.vcStreak,
-      prarambhVersion: data.prarambhVersion,
-      prarambhDay: data.prarambhDay,
-      prarambhStreak: data.prarambhStreak,
-      xp: data.xp,
-      badges: data.badges
+      username: data.username || 'Unknown',
+      avatar: data.avatar || 'default-avatar.png',
+      level: data.level ?? 0,
+      rank: data.rank ?? 'N/A',
+      messagesSent: data.messagesSent ?? 0,
+      voiceHours: data.vc?.lifetime ?? 0,
+      vcStreak: data.vc?.vcStreak ?? 0,
+      prarambhVersion: data.prarambhVersion || 'N/A',
+      prarambhDay: data.prarambhDay ?? 0,
+      prarambhStreak: data.prarambhStreak ?? 0,
+      xp: {
+        daily: data.stats?.daily ?? 0,
+        weekly: data.stats?.weekly ?? 0,
+        monthly: data.stats?.monthly ?? 0,
+        yearly: data.stats?.yearly ?? 0,
+        total: data.stats?.lifetime ?? 0
+      },
+      badges: data.badges || []
     };
 
-    res.status(200).json(profile);
+    return res.status(200).json(profile);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Profile fetch error:', err);
+    return res.status(500).json({ error: 'Server error' });
   }
 }
