@@ -5,11 +5,11 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const FRONTEND_DASHBOARD = 'https://bookscoffeedreams.github.io/dashboard.html';
 
 export default async function handler(req, res) {
-  const { query, url } = req;
+  const { query } = req;
 
-  // Step 1: Redirect to Discord login
-  if (url.includes('?login')) {
-    const REDIRECT_URI = 'https://discord-login-backend.vercel.app/api/auth/callback';
+  // Step 1: Login redirect
+  if (query.login) {
+    const REDIRECT_URI = 'https://discord-login-backend.vercel.app/api/auth';
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
 
     res.writeHead(302, { Location: discordAuthUrl });
@@ -18,11 +18,10 @@ export default async function handler(req, res) {
   }
 
   // Step 2: Callback from Discord
-  if (url.includes('/api/auth/callback')) {
+  if (query.code) {
     const code = query.code;
-    if (!code) return res.status(400).send('No code provided');
 
-    const REDIRECT_URI = 'https://discord-login-backend.vercel.app/api/auth/callback';
+    const REDIRECT_URI = 'https://discord-login-backend.vercel.app/api/auth';
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -48,6 +47,7 @@ export default async function handler(req, res) {
       const user = await userRes.json();
       const tokenParam = encodeURIComponent(JSON.stringify(user));
 
+      // Redirect to frontend dashboard
       res.writeHead(302, { Location: `${FRONTEND_DASHBOARD}?user=${tokenParam}` });
       res.end();
     } catch (err) {
@@ -57,5 +57,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  res.status(404).send('Not Found');
+  // If neither login nor code, show simple message
+  res.status(200).send('BCD Discord Login Endpoint');
 }
